@@ -1,0 +1,11 @@
+{
+    "extends": ["airbnb-base", "plugin:prettier/recommended"],
+    "plugins": ["prettier"],
+    "rules": {
+      "prettier/prettier": "error",
+      "import/extensions": "off",
+      "no-constant-condition": "off",
+      "no-await-in-loop": "off",
+      "no-promise-executor-return": "off"
+    }
+}

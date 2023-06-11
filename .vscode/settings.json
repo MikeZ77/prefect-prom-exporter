@@ -1,0 +1,13 @@
+{
+    "eslint.validate": [
+      "javascript",
+      "javascriptreact",
+      "typescript",
+      "typescriptreact"
+    ],
+    "editor.codeActionsOnSave": {
+      "source.fixAll.eslint": true,
+    },
+    // https://github.com/prettier/prettier-vscode/issues/3020
+    "prettier.prettierPath": "./node_modules/prettier"
+  }
