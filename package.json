@@ -7,7 +7,8 @@
   "scripts": {
     "lint": "eslint --cache \"src/**/*.{js,jsx,ts,tsx}\"",
     "lint:fix": "eslint --cache --fix \"src/**/*.{js,jsx,ts,tsx}\"",
-    "server": "node server.js"
+    "server:dev": "nodemon server.js",
+    "server:prod": "node server.js"
   },
   "husky": {
     "hooks": {
@@ -31,8 +32,10 @@
   "dependencies": {
     "dotenv": "^16.1.4",
     "express": "^4.18.2",
+    "lodash": "^4.17.21",
     "node-fetch": "^3.3.1",
-    "prom-client": "^14.2.0"
+    "prom-client": "^14.2.0",
+    "winston": "^3.9.0"
   },
   "devDependencies": {
     "eslint": "^8.42.0",

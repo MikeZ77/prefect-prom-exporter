@@ -1,15 +1,18 @@
 import 'dotenv/config';
 import express from 'express';
 import promClient from 'prom-client';
-import { fetchFlows } from './src/prefect-flows.js';
-
-const port = process.env.SCRAPE_INTERVAL || 3000;
-const scrapeInterval = process.env.SCRAPE_INTERVAL || 30000;
-const metricsPath = process.env.METRICS_PATH || '/metrics';
+import { SCRAPE_INTERVAL, PORT, METRICS_PATH } from './src/get-env.js';
+import { fetchFlowsCount, fetchFlows } from './src/prefect-flows.js';
+import {
+  fetchFlowRunsScheduled,
+  fetchFlowRunsPending,
+  fetchFlowRunsRunning,
+} from './src/prefect-flow-runs.js';
 
 const app = express();
+// TODO: Validate that work_pool and tags (projects) exist on the server.
 
-app.get(metricsPath, async (req, res) => {
+app.get(METRICS_PATH, async (req, res) => {
   try {
     res.set('Content-Type', promClient.register.contentType);
     res.end(await promClient.register.metrics());
@@ -18,10 +21,17 @@ app.get(metricsPath, async (req, res) => {
   }
 });
 
-app.listen(port, async () => {
-  console.log(`Server is running on port ${port}`);
+app.listen(PORT, async () => {
+  console.log(`Server is running on port ${PORT}`);
   while (true) {
-    await new Promise((resolve) => setTimeout(resolve, scrapeInterval));
-    await Promise.all([fetchFlows()]);
+    await new Promise((resolve) => setTimeout(resolve, SCRAPE_INTERVAL));
+    const flowNames = await fetchFlows();
+    console.log('FLOWS', flowNames);
+    await Promise.all([
+      fetchFlowsCount(),
+      fetchFlowRunsScheduled(flowNames),
+      fetchFlowRunsPending(flowNames),
+      fetchFlowRunsRunning(flowNames),
+    ]);
   }
 });

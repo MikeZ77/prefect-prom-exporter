@@ -1,23 +1,19 @@
 import promClient from 'prom-client';
-import fetch from 'node-fetch';
+import _ from 'lodash';
+import fetchApi from './get-request.js';
 
-const prefectApi = process.env.PREFECT_API_URL || 'http://127.0.0.1:4200/';
-
-const flowTotal = new promClient.Gauge({
+const flowsCount = new promClient.Gauge({
   name: 'prefect_flows',
-  help: 'Prefect flows per project ID or name',
+  help: 'Prefect flows total count based on tag and work_pool',
   // labelNames: ['tags'],
 });
 
-export const fetchFlows = async () => {
-  const response = await fetch(`${prefectApi}api/flows/filter`, {
-    method: 'POST',
-  });
-  const data = await response.json();
-  console.log(data);
-  flowTotal.set(data.length);
+export const fetchFlowsCount = async () => {
+  const data = await fetchApi('FLOWS_COUNT');
+  flowsCount.set(data);
 };
 
-export const doSomethingElse = async () => {
-  console.log('Test');
+export const fetchFlows = async () => {
+  const data = await fetchApi('FLOWS');
+  return _.uniq(_.map(data, 'name'));
 };

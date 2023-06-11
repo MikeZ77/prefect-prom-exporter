@@ -6,6 +6,9 @@
       "import/extensions": "off",
       "no-constant-condition": "off",
       "no-await-in-loop": "off",
-      "no-promise-executor-return": "off"
+      "no-promise-executor-return": "off",
+      "max-len":  ["warning", {
+        "code": 100 
+      }]
     }
 }
