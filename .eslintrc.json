@@ -7,8 +7,8 @@
       "no-constant-condition": "off",
       "no-await-in-loop": "off",
       "no-promise-executor-return": "off",
-      "max-len":  ["warning", {
-        "code": 100 
+      "max-len":  ["warn", {
+        "code": 120 
       }]
     }
 }

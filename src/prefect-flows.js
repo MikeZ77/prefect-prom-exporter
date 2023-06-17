@@ -13,7 +13,8 @@ export const fetchFlowsCount = async () => {
   flowsCount.set(data);
 };
 
-export const fetchFlows = async () => {
+export const fetchFlowLabels = async (metricsFunc) => {
   const data = await fetchApi('FLOWS');
-  return _.uniq(_.map(data, 'name'));
+  const flowLabels = _.map(data, (flow) => ({ name: flow.name, tags: flow.tags }));
+  return metricsFunc(flowLabels);
 };

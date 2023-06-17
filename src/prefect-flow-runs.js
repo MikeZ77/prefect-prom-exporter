@@ -8,32 +8,44 @@ import fetchApi from './get-request.js';
 const flowRunsScheduled = new promClient.Gauge({
   name: 'prefect_flow_runs_scheduled',
   help: 'Prefect flow runs scheduled count based on tag and work_pool',
-  labelNames: ['flow_name'],
+  labelNames: ['flow_name', 'tags'],
 });
 
 const flowRunsPending = new promClient.Gauge({
   name: 'prefect_flow_runs_pending',
   help: 'Prefect flow runs pending count based on tag and work_pool',
-  labelNames: ['flow_name'],
+  labelNames: ['flow_name', 'tags'],
 });
 
 const flowRunsRunning = new promClient.Gauge({
   name: 'prefect_flow_runs_running',
   help: 'Prefect flow runs running count based on tag and work_pool',
-  labelNames: ['flow_name'],
+  labelNames: ['flow_name', 'tags'],
 });
 
-export const fetchFlowRunsScheduled = async (flowNames) => {
-  const data = await Promise.all(_.map(flowNames, name => fetchApi('FLOW_RUNS_SCHEDULED', name)));
-  _.forEach(_.zip(flowNames, data), ([name, value]) => flowRunsScheduled.labels({ flow_name: name }).set(value));
+const fetchFlowRunsScheduled = async (flowLabels) => {
+  const data = await Promise.all(_.map(flowLabels, (labels) => fetchApi('FLOW_RUNS_SCHEDULED', labels.name)));
+  _.forEach(_.zip(flowLabels, data), ([labels, value]) =>
+    flowRunsScheduled.labels({ flow_name: labels.name, tags: labels.tags.toString() }).set(value),
+  );
 };
 
-export const fetchFlowRunsPending = async (flowNames) => {
-  const data = await Promise.all(_.map(flowNames, name => fetchApi('FLOW_RUNS_PENDING', name)));
-  _.forEach(_.zip(flowNames, data), ([name, value]) => flowRunsPending.labels({ flow_name: name }).set(value));
+const fetchFlowRunsPending = async (flowLabels) => {
+  const data = await Promise.all(_.map(flowLabels, (labels) => fetchApi('FLOW_RUNS_PENDING', labels.name)));
+  _.forEach(_.zip(flowLabels, data), ([labels, value]) =>
+    flowRunsPending.labels({ flow_name: labels.name, tags: labels.tags.toString() }).set(value),
+  );
 };
 
-export const fetchFlowRunsRunning = async (flowNames) => {
-  const data = await Promise.all(_.map(flowNames, name => fetchApi('FLOW_RUNS_RUNNING', name)));
-  _.forEach(_.zip(flowNames, data), ([name, value]) => flowRunsRunning.labels({ flow_name: name }).set(value));
+const fetchFlowRunsRunning = async (flowLabels) => {
+  const data = await Promise.all(_.map(flowLabels, (labels) => fetchApi('FLOW_RUNS_RUNNING', labels.name)));
+  _.forEach(_.zip(flowLabels, data), ([labels, value]) =>
+    flowRunsRunning.labels({ flow_name: labels.name, tags: labels.tags.toString() }).set(value),
+  );
 };
+
+export default async (fetchFlowLabels) => [
+  fetchFlowLabels(fetchFlowRunsScheduled),
+  fetchFlowLabels(fetchFlowRunsPending),
+  fetchFlowLabels(fetchFlowRunsRunning),
+];

@@ -5,8 +5,8 @@
   "main": "server.js",
   "type": "module",
   "scripts": {
-    "lint": "eslint --cache \"src/**/*.{js,jsx,ts,tsx}\"",
-    "lint:fix": "eslint --cache --fix \"src/**/*.{js,jsx,ts,tsx}\"",
+    "lint": "eslint --cache \"**/*.js\"",
+    "lint:fix": "eslint --cache --fix \"**/*.js\"",
     "server:dev": "nodemon server.js",
     "server:prod": "node server.js"
   },
@@ -16,7 +16,7 @@
     }
   },
   "lint-staged": {
-    "*.{js,jsx,ts,tsx}": "npm run lint:fix"
+    "*.js": "npm run lint:fix"
   },
   "repository": {
     "type": "git",
