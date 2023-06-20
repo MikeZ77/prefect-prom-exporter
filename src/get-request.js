@@ -10,16 +10,17 @@ const config = {
   FLOWS_COUNT: Api.flowsCountT,
   FLOWS: Api.flowsT,
   // FLOW_RUNS
-  FLOW_RUNS_SCHEDULED: _.partial(Api.flowRunsStateT, 'SCHEDULED'),
-  FLOW_RUNS_PENDING: _.partial(Api.flowRunsStateT, 'PENDING'),
-  FLOW_RUNS_RUNNING: _.partial(Api.flowRunsStateT, 'RUNNING'),
-  // FLOW_RUNS_COMPLETED: _.partial(flowRunsStateT, 'COMPLETED'),
-  // FLOW_RUNS_FAILED: flowRunsStateT('FAILED'),
-  // FLOW_RUNS_CANCELLED: flowRunsStateT('CANCELLED'),
-  // FLOW_RUNS_CRASHED: flowRunsStateT('CRASHED'),
-  // FLOW_RUNS_PAUSED: flowRunsStateT('PAUSED'),
-  // FLOW_RUNS_CANCELLING: flowRunsStateT('CANCELLING'),
-
+  FLOW_RUNS_COUNT_SCHEDULED: _.partial(Api.flowRunsStateT, 'SCHEDULED'),
+  FLOW_RUNS_COUNT_PENDING: _.partial(Api.flowRunsStateT, 'PENDING'),
+  FLOW_RUNS_COUNT_RUNNING: _.partial(Api.flowRunsStateT, 'RUNNING'),
+  FLOW_RUNS_COUNT_COMPLETED: _.partial(Api.flowRunsStateT, 'COMPLETED'),
+  FLOW_RUNS_COUNT_FAILED: _.partial(Api.flowRunsStateT, 'FAILED'),
+  FLOW_RUNS_COUNT_CANCELLED: _.partial(Api.flowRunsStateT, 'CANCELLED'),
+  FLOW_RUNS_COUNT_CRASHED: _.partial(Api.flowRunsStateT, 'CRASHED'),
+  FLOW_RUNS_COUNT_PAUSED: _.partial(Api.flowRunsStateT, 'PAUSED'),
+  FLOW_RUNS_COUNT_CANCELLING: _.partial(Api.flowRunsStateT, 'CANCELLING'),
+  FLOW_RUNS_START_TIME: Api.flowRunsStartTime,
+  FLOW_RUNS_BY_ID: Api.flowRunsById,
   // WORK_POOLS
   WORK_POOLS: Api.workPoolsT,
 };

@@ -7,6 +7,7 @@
       "no-constant-condition": "off",
       "no-await-in-loop": "off",
       "no-promise-executor-return": "off",
+      "no-unused-expressions": ["error", { "allowTernary": true }],
       "max-len":  ["warn", {
         "code": 120 
       }]

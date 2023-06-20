@@ -1,5 +1,4 @@
 import promClient from 'prom-client';
-import _ from 'lodash';
 import fetchApi from './get-request.js';
 
 const flowsCount = new promClient.Gauge({
@@ -8,13 +7,8 @@ const flowsCount = new promClient.Gauge({
   // labelNames: ['tags'],
 });
 
+// eslint-disable-next-line import/prefer-default-export
 export const fetchFlowsCount = async () => {
   const data = await fetchApi('FLOWS_COUNT');
   flowsCount.set(data);
-};
-
-export const fetchFlowLabels = async (metricsFunc) => {
-  const data = await fetchApi('FLOWS');
-  const flowLabels = _.map(data, (flow) => ({ name: flow.name, tags: flow.tags }));
-  return metricsFunc(flowLabels);
 };

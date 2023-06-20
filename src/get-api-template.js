@@ -46,3 +46,34 @@ export const versionT = () => ({
   url: `${PREFECT_API_URL}api/version`,
   options: { method: 'GET' },
 });
+
+export const flowRunsStartTime = (after, before) => ({
+  url: `${PREFECT_API_URL}api/flow_runs/filter`,
+  options: {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      flow_runs: {
+        start_time: {
+          before_: before,
+          after_: after,
+        },
+      },
+    }),
+  },
+});
+
+export const flowRunsById = (flowRunIds) => ({
+  url: `${PREFECT_API_URL}api/flow_runs/filter`,
+  options: {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      flow_runs: {
+        id: {
+          any_: [...flowRunIds],
+        },
+      },
+    }),
+  },
+});
