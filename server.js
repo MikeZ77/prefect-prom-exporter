@@ -3,7 +3,7 @@ import express from 'express';
 import promClient from 'prom-client';
 import Logger from './src/get-logger.js';
 import { SCRAPE_INTERVAL, PORT, METRICS_PATH } from './src/get-env.js';
-import { fetchFlowLabels, initFlowRunState } from './src/get-helpers.js';
+import stateManager from './src/state.js';
 import prefectFlowRuns from './src/prefect-flow-runs.js';
 import prefectRoot from './src/prefect-root.js';
 
@@ -20,15 +20,12 @@ app.get(METRICS_PATH, async (req, res) => {
 
 app.listen(PORT, async () => {
   Logger.info(`Server is running on port ${PORT}`);
-  const flowRunState = initFlowRunState();
+  const { setTimeDelta, fetchFlowRunsByStartTime, fetchFlowLabels, cleanupTerminalStates } = stateManager;
   while (true) {
     await new Promise((resolve) => setTimeout(resolve, SCRAPE_INTERVAL));
-    flowRunState.setTimeDelta(new Date().toISOString());
-    await flowRunState.fetchFlowRunsByStartTime();
-    await Promise.all([
-      ...(await prefectRoot()),
-      ...(await prefectFlowRuns(fetchFlowLabels, flowRunState.getFlowRuns())),
-    ]);
-    flowRunState.cleanupTerminalStates();
+    setTimeDelta(new Date().toISOString());
+    await Promise.all([fetchFlowRunsByStartTime(), fetchFlowLabels()]);
+    await Promise.all([...(await prefectRoot()), ...(await prefectFlowRuns())]);
+    cleanupTerminalStates();
   }
 });

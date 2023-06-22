@@ -8,7 +8,7 @@ const config = {
   VERSION: Api.versionT,
   // FLOWS
   FLOWS_COUNT: Api.flowsCountT,
-  FLOWS: Api.flowsT,
+  FLOWS_FILTER: Api.flowsT,
   // FLOW_RUNS
   FLOW_RUNS_COUNT_SCHEDULED: _.partial(Api.flowRunsStateT, 'SCHEDULED'),
   FLOW_RUNS_COUNT_PENDING: _.partial(Api.flowRunsStateT, 'PENDING'),
@@ -19,8 +19,8 @@ const config = {
   FLOW_RUNS_COUNT_CRASHED: _.partial(Api.flowRunsStateT, 'CRASHED'),
   FLOW_RUNS_COUNT_PAUSED: _.partial(Api.flowRunsStateT, 'PAUSED'),
   FLOW_RUNS_COUNT_CANCELLING: _.partial(Api.flowRunsStateT, 'CANCELLING'),
-  FLOW_RUNS_START_TIME: Api.flowRunsStartTime,
-  FLOW_RUNS_BY_ID: Api.flowRunsById,
+  FLOW_RUNS_FILTER_START_TIME: Api.flowRunsStartTime,
+  FLOW_RUNS_FILTER_ID: Api.flowRunsById,
   // WORK_POOLS
   WORK_POOLS: Api.workPoolsT,
 };
