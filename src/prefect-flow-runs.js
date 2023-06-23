@@ -232,14 +232,14 @@ const flowRunEstimatedTimeCount = new promClient.Counter({
 // TODO: make the buckets configurable
 const flowRunTimeHist = new promClient.Histogram({
   name: 'prefect_distribution_flow_run_time_ms',
-  help: 'the distribution of prefect flow run times in milliseconds',
+  help: 'the distribution of prefect_total_flow_run_time_ms',
   buckets: [0, 500, 1000, 5000, 10000, 20000],
   labelNames: ['flow_name', 'tags', 'state'],
 });
 
 const flowRunEstimatedTimeHist = new promClient.Histogram({
   name: 'prefect_distribution_flow_run_estimated_time_ms',
-  help: 'the distribution of prefect flow run times in milliseconds',
+  help: 'the distribution of prefect_total_flow_run_estimated_time_ms',
   buckets: [0, 500, 1000, 5000, 10000, 20000],
   labelNames: ['flow_name', 'flow_name', 'tags', 'state'],
 });
@@ -254,6 +254,13 @@ const flowRunEstimatedStartTimeDelta = new promClient.Counter({
   name: 'prefect_total_flow_run_start_time_delta_ms',
   help: 'the difference between a flows runs actual start time and its exprected start time in milliseconds',
   labelNames: ['flow_name', 'tags', 'state'],
+});
+
+const flowRunEstimatedStartTimeDeltaHist = new promClient.Histogram({
+  name: 'prefect_distribution_flow_run_estimated_time_delta_ms',
+  help: 'the distribution of prefect_total_flow_run_start_time_delta_ms',
+  buckets: [0, 500, 1000, 5000, 10000, 20000],
+  labelNames: ['flow_name', 'flow_name', 'tags', 'state'],
 });
 
 const fetchTotalFlowRunTime = () => {
@@ -283,6 +290,16 @@ const fetchTotalFlowRunEstimatedTime = () => {
     flowRunEstimatedTimeCount
       .labels({ flow_name: flow.flow_name, tags: flow.tags.toString(), state: flow.state_type })
       .inc(Math.round(1000 * flow.estimated_run_time)),
+  );
+};
+
+const fetchHistFlowRunStartTimeDelta = () => {
+  const terminalStates = stateManager.getTerminalStates();
+  const flowRuns = _.filter(stateManager.getFlowRuns(), (flow) => _.includes(terminalStates, flow.state_type));
+  _.forEach(flowRuns, (flow) =>
+    flowRunEstimatedStartTimeDeltaHist
+      .labels({ flow_name: flow.flow_name, tags: flow.tags.toString(), state: flow.state_type })
+      .observe(Math.round(1000 * flow.total_run_time)),
   );
 };
 
@@ -340,4 +357,5 @@ export default async () => [
   fetchHistFlowRunEstimatedTime(),
   fetchFlowRunManualTrigger(),
   fetchTotalFlowRunStartTimeDelta(),
+  fetchHistFlowRunStartTimeDelta(),
 ];

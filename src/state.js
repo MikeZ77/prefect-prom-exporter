@@ -43,15 +43,35 @@ const stateManager = () => {
       fetchApi('FLOW_RUNS_FILTER_START_TIME', state.prevPollTime, state.curPollTime),
       fetchApi('FLOWS_FILTER'),
     ]);
-    const allFlowsById = _.keyBy(allFlows, 'id');
-    const updatedFlowRuns = await fetchApi('FLOW_RUNS_FILTER_ID', _.map([...newFlowRuns, ...state.flowRuns], 'id'));
-    state.flowRuns = _.map(updatedFlowRuns, (flow) => ({ ...flow, flow_name: _.get(allFlowsById, flow.flow_id).name }));
+    const curFlowRuns = await fetchApi('FLOW_RUNS_FILTER_ID', _.map([...newFlowRuns, ...state.flowRuns], 'id'));
+    const [allFlowsById, prevFlowRunsById] = [_.keyBy(allFlows, 'id'), _.keyBy(state.flowRuns, 'id')];
+
+    state.flowRuns = _.map(curFlowRuns, (flowRun) => {
+      return _(flowRun)
+        .thru((updatedFlowRun) => {
+          const flow = _.get(allFlowsById, updatedFlowRun.flow_id);
+          return { ...updatedFlowRun, flow_name: flow.name };
+        })
+        .thru((updatedFlowRun) => {
+          const prevFlowRun = _.get(prevFlowRunsById, updatedFlowRun.id);
+          return {
+            ...updatedFlowRun,
+            ...(prevFlowRun?.to_delete ? { to_delete: prevFlowRun.to_delete } : { to_delete: false }),
+          };
+        })
+        .value();
+    });
   };
+
   const cleanupTerminalStates = () => {
-    // TODO: flag flow runs to_delete one cycle before they are hard deleted.
-    // The reason is that it allows us to reset a metric (gauage) before it does not exist.
-    // It also allows us to cleanup metrics that have unique labels
-    state.flowRuns = _.filter(state.flowRuns, (flowRun) => !_.includes(TERMINAL_STATES, flowRun.state_type));
+    /* Now flow run that is finished is kept in state one cycle longer so end actions can be performed:
+      - allows metrics to be reset (gauage) before it does not exist
+      - it also allows metrics that have unique labels to be cleaned up
+    */
+    state.flowRuns = _(state.flowRuns)
+      .filter((flowRun) => !(_.includes(TERMINAL_STATES, flowRun.state_type) && flowRun.to_delete))
+      .map((flowRun) => (_.includes(TERMINAL_STATES, flowRun.state_type) ? { ...flowRun, to_delete: true } : flowRun))
+      .value();
   };
 
   const fetchFlowLabels = async () => {
