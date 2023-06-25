@@ -6,6 +6,7 @@ import { SCRAPE_INTERVAL, PORT, METRICS_PATH } from './src/get-env.js';
 import stateManager from './src/state.js';
 import prefectFlowRuns from './src/prefect-flow-runs.js';
 import prefectRoot from './src/prefect-root.js';
+import prefectLogs from './src/prefect-logs.js';
 
 const app = express();
 
@@ -20,12 +21,12 @@ app.get(METRICS_PATH, async (req, res) => {
 
 app.listen(PORT, async () => {
   Logger.info(`Server is running on port ${PORT}`);
-  const { setTimeDelta, fetchFlowRunsByStartTime, fetchFlowLabels, cleanupTerminalStates } = stateManager;
+  const { setTimeDelta, fetchData, cleanupTerminalStates } = stateManager;
   while (true) {
     await new Promise((resolve) => setTimeout(resolve, SCRAPE_INTERVAL));
     setTimeDelta(new Date().toISOString());
-    await Promise.all([fetchFlowRunsByStartTime(), fetchFlowLabels()]);
-    await Promise.all([...(await prefectRoot()), ...(await prefectFlowRuns())]);
+    await Promise.all(await fetchData());
+    await Promise.all([...(await prefectRoot()), ...(await prefectFlowRuns()), ...(await prefectLogs())]);
     cleanupTerminalStates();
   }
 });

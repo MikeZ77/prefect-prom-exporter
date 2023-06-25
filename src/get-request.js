@@ -23,6 +23,8 @@ const config = {
   FLOW_RUNS_FILTER_ID: Api.flowRunsById,
   // WORK_POOLS
   WORK_POOLS: Api.workPoolsT,
+  // LOGS
+  LOGS_FILTER: Api.logsFilter,
 };
 
 export default async (metric, ...args) => {

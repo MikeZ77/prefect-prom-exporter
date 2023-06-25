@@ -9,28 +9,48 @@ const stateManager = () => {
    */
   // TODO: Missing terminal state TimedOut
   const TERMINAL_STATES = ['COMPLETED', 'FAILED', 'CANCELLED', 'CRASHED'];
+  const ACTIVE_STATES = ['RUNNING', 'PAUSED', 'CANCELLING'];
+  const STARTING_STATES = ['SCHEDULED', 'PENDING'];
+
   const state = {
     prevPollTime: new Date().toISOString(),
     curPollTime: new Date().toISOString(),
     flowRuns: [],
-    flowLabels: [],
+    flowRunsCount: [],
+    logs: [],
   };
 
   const getTerminalStates = () => {
     return [...TERMINAL_STATES];
   };
 
+  const getActiveStates = () => {
+    return [...ACTIVE_STATES];
+  };
+
   const getFlowRuns = () => {
-    // return _.cloneDeep(state.flowRuns);
     return [...state.flowRuns];
   };
 
-  const getFlowLabels = () => {
-    return [...state.flowLabels];
+  const getFlowRunsCount = () => {
+    return [...state.flowRunsCount];
   };
 
   const getTimeDelta = () => {
     return { prevPollTime: state.prevPollTime, curPollTime: state.curPollTime };
+  };
+
+  const getLogs = () => {
+    return [...state.logs];
+  };
+
+  const constructLabels = (prefectObject) => {
+    return {
+      ...(prefectObject.name ? { flow_name: prefectObject.flow_name } : {}),
+      ...(prefectObject.tags ? { tags: prefectObject.tags.toString() } : {}),
+      ...(prefectObject.state_type ? { state: prefectObject.state_type } : {}),
+      ...(prefectObject.level ? { level: prefectObject.level } : {}),
+    };
   };
 
   const setTimeDelta = (pollTime) => {
@@ -46,48 +66,110 @@ const stateManager = () => {
     const curFlowRuns = await fetchApi('FLOW_RUNS_FILTER_ID', _.map([...newFlowRuns, ...state.flowRuns], 'id'));
     const [allFlowsById, prevFlowRunsById] = [_.keyBy(allFlows, 'id'), _.keyBy(state.flowRuns, 'id')];
 
-    state.flowRuns = _.map(curFlowRuns, (flowRun) => {
-      return _(flowRun)
-        .thru((updatedFlowRun) => {
-          const flow = _.get(allFlowsById, updatedFlowRun.flow_id);
-          return { ...updatedFlowRun, flow_name: flow.name };
-        })
-        .thru((updatedFlowRun) => {
-          const prevFlowRun = _.get(prevFlowRunsById, updatedFlowRun.id);
-          return {
-            ...updatedFlowRun,
-            ...(prevFlowRun?.to_delete ? { to_delete: prevFlowRun.to_delete } : { to_delete: false }),
-          };
-        })
-        .value();
+    state.flowRuns = _.map(curFlowRuns, (currentflowRun) => {
+      const flow = _.get(allFlowsById, currentflowRun.flow_id);
+      const previousFlowRun = _.get(prevFlowRunsById, currentflowRun.id);
+
+      return {
+        ...currentflowRun,
+        flow_name: flow.name,
+        current_time: _.includes(TERMINAL_STATES, currentflowRun.state_type)
+          ? previousFlowRun.current_time
+          : new Date(),
+        previous_state:
+          previousFlowRun && currentflowRun.state_type !== previousFlowRun.state_type
+            ? previousFlowRun.state_type
+            : undefined,
+        updated_state:
+          !previousFlowRun || (previousFlowRun && currentflowRun.state_type !== previousFlowRun.state_type),
+      };
     });
+
+    //   _(flowRun)
+    //     .thru((updatedFlowRun) => {
+    //       const flow = _.get(allFlowsById, updatedFlowRun.flow_id);
+    //       return { ...updatedFlowRun, flow_name: flow.name };
+    //     })
+    //     .thru((updatedFlowRun) => {
+    //       // TODO: Change to if prev state != current state
+    //       // Keep current_time: prevFlowRun.current_time for TERMINAL_STATES
+    //       // For Counter, flag true if a flow run is new, otherwise flag false
+    //       const prevFlowRun = _.get(prevFlowRunsById, updatedFlowRun.id);
+    //       if (_.includes(TERMINAL_STATES, updatedFlowRun.state_type)) {
+    //         return {
+    //           ...updatedFlowRun,
+    //           current_time: prevFlowRun.current_time,
+    //         };
+    //       }
+    //       return updatedFlowRun;
+    //     })
+    //     .thru((updatedFlowRun) => {
+    //       const prevFlowRun = _.get(prevFlowRunsById, updatedFlowRun.id);
+    //       if (prevFlowRun && updatedFlowRun.state_type !== prevFlowRun.state_type) {
+    //         return {
+    //           ...updatedFlowRun,
+    //           previous_state: prevFlowRun.state_type,
+    //           updated_state: true,
+    //         };
+    //       }
+
+    //       if (!prevFlowRun) {
+    //         return { ...updatedFlowRun, updated_state: true };
+    //       }
+    //       return { ...updatedFlowRun, updated_state: false };
+    //     })
+    //     .thru((updatedFlowRun) => {
+    //       if (_.includes(ACTIVE_STATES, updatedFlowRun.state_type)) {
+    //         return { ...updatedFlowRun, current_time: new Date() };
+    //       }
+    //       return updatedFlowRun;
+    //     })
+    //     .value(),
   };
 
   const cleanupTerminalStates = () => {
-    /* Now flow run that is finished is kept in state one cycle longer so end actions can be performed:
-      - allows metrics to be reset (gauage) before it does not exist
-      - it also allows metrics that have unique labels to be cleaned up
-    */
-    state.flowRuns = _(state.flowRuns)
-      .filter((flowRun) => !(_.includes(TERMINAL_STATES, flowRun.state_type) && flowRun.to_delete))
-      .map((flowRun) => (_.includes(TERMINAL_STATES, flowRun.state_type) ? { ...flowRun, to_delete: true } : flowRun))
-      .value();
+    state.flowRuns = _.filter(state.flowRuns, (flowRun) => !_.includes(TERMINAL_STATES, flowRun.state_type));
   };
 
-  const fetchFlowLabels = async () => {
-    const data = await fetchApi('FLOWS_FILTER');
-    state.flowLabels = _.map(data, (flow) => ({ name: flow.name, tags: flow.tags }));
+  const fetchFlowRunsCount = async () => {
+    const allFlows = await fetchApi('FLOWS_FILTER');
+    const flowLabels = _.map(allFlows, (flow) => ({ name: flow.name, tags: flow.tags }));
+    const allStates = [...STARTING_STATES, ...ACTIVE_STATES, ...TERMINAL_STATES];
+
+    const metrics = _.flatMap(allStates, (flowState) =>
+      _.map(flowLabels, (labels) => async () => {
+        const count = await fetchApi(`FLOW_RUNS_COUNT_${flowState}`, labels.name);
+        return { ...constructLabels(labels), state: flowState, count };
+      }),
+    );
+
+    state.flowRunsCount = await Promise.all(_.map(metrics, (fn) => fn()));
   };
+
+  const fetchLogs = async () => {
+    const logs = await fetchApi('LOGS_FILTER', state.prevPollTime, state.curPollTime);
+    const flowRunsById = _.keyBy(state.flowRuns, 'id');
+    state.logs = _(logs)
+      .map((log) => {
+        const flowRun = _.get(flowRunsById, log.flow_run_id);
+        return flowRun ? { ...log, flow_name: flowRun.flow_name, tags: flowRun.tags } : undefined;
+      })
+      .filter(_.isObject);
+  };
+
+  const fetchData = async () => [fetchLogs(), fetchFlowRunsByStartTime(), fetchFlowRunsCount()];
 
   return {
     getTerminalStates,
+    getActiveStates,
+    getLogs,
     getFlowRuns,
-    getFlowLabels,
+    getFlowRunsCount,
     getTimeDelta,
     setTimeDelta,
-    fetchFlowRunsByStartTime,
+    fetchData,
+    constructLabels,
     cleanupTerminalStates,
-    fetchFlowLabels,
   };
 };
 

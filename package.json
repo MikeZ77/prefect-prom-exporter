@@ -7,6 +7,7 @@
   "scripts": {
     "lint": "eslint --cache \"**/*.js\"",
     "lint:fix": "eslint --cache --fix \"**/*.js\"",
+    "test": "node --experimental-vm-modules ./node_modules/.bin/jest",
     "server:dev": "nodemon server.js",
     "server:prod": "node server.js"
   },
@@ -44,6 +45,7 @@
     "eslint-plugin-import": "^2.27.5",
     "eslint-plugin-prettier": "^4.2.1",
     "husky": "^8.0.3",
+    "jest": "^29.5.0",
     "lint-staged": "^13.2.2",
     "nodemon": "^2.0.22",
     "prettier": "^2.8.8"

@@ -77,3 +77,19 @@ export const flowRunsById = (flowRunIds) => ({
     }),
   },
 });
+
+export const logsFilter = (after, before) => ({
+  url: `${PREFECT_API_URL}api/logs/filter`,
+  options: {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      logs: {
+        timestamp: {
+          before_: before,
+          after_: after,
+        },
+      },
+    }),
+  },
+});
