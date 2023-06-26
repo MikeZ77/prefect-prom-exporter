@@ -74,7 +74,6 @@ const flowRunCurrentTimeGauge = new promClient.Gauge({
 
 const flowRunsCountTotal = () => {
   const { getFlowRuns, constructLabels } = stateManager;
-  console.log(getFlowRuns());
   _.forEach(getFlowRuns(), (flowRun) => {
     if (flowRun.updated_state) {
       flowRunCountCounter.labels(constructLabels(flowRun)).inc(1);
@@ -171,7 +170,7 @@ const flowRunTimeActive = () => {
   });
 };
 
-export { flowRunsCountTotal };
+export { flowRunCountCounter, flowRunsCountTotal };
 
 export default async () => [
   flowRunsCount(),

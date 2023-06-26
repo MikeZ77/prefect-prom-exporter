@@ -1,9 +1,9 @@
 // eslint-disable-next-line import/no-extraneous-dependencies
 import { describe, it, jest, expect } from '@jest/globals';
-import { flowRunsCountTotal } from '../prefect-flow-runs';
+import { flowRunCountCounter, flowRunsCountTotal } from '../prefect-flow-runs';
 import stateManager from '../state.js';
 
-const mockGetFlowRuns = jest.spyOn(stateManager, 'getFlowRuns').mockReturnValue([
+jest.spyOn(stateManager, 'getFlowRuns').mockReturnValue([
   {
     id: '69b95f48-3691-4494-ba5c-896d2b9b0c7a',
     name: 'quantum-camel',
@@ -25,20 +25,21 @@ const mockGetFlowRuns = jest.spyOn(stateManager, 'getFlowRuns').mockReturnValue(
   },
 ]);
 
-const mockFlowRunCountCounter = {
-  labels: jest.fn().mockReturnThis(),
-  inc: jest.fn(),
-};
+const promIncSpy = jest.spyOn(flowRunCountCounter, 'inc');
+const labelsMock = jest.fn().mockReturnThis();
+flowRunCountCounter.labels = labelsMock;
 
 describe('flowRunsCountTotal', () => {
   it('increments the count when the flow is new or its state has changed', () => {
     flowRunsCountTotal();
-    expect(mockGetFlowRuns).toHaveBeenCalled();
-    expect(mockFlowRunCountCounter.labels).toHaveBeenCalledWith({
+    expect(labelsMock).toHaveBeenCalledTimes(1);
+    expect(labelsMock).toHaveBeenCalledWith({
       flow_name: 'my-flow',
+      state: 'RUNNING',
       tags: '',
-      state_type: 'RUNNING',
     });
-    expect(mockFlowRunCountCounter.inc).toHaveBeenCalledTimes(1);
+
+    expect(promIncSpy).toHaveBeenCalledTimes(1);
+    expect(promIncSpy).toHaveBeenCalledWith(1);
   });
 });
