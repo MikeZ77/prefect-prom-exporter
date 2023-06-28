@@ -1,45 +1,170 @@
 // eslint-disable-next-line import/no-extraneous-dependencies
-import { describe, it, jest, expect } from '@jest/globals';
-import { flowRunCountCounter, flowRunsCountTotal } from '../prefect-flow-runs';
+import { describe, it, jest, beforeEach, expect } from '@jest/globals';
+import _ from 'lodash';
 import stateManager from '../state.js';
+import mocks from './mock-data.js';
+import {
+  flowRunCountCounter,
+  flowRunsCountTotal,
+  flowRunCountGauge,
+  flowRunsCount,
+  flowRunEndTimeCount,
+  flowRunTime,
+  flowRunManualTriggerCount,
+  flowRunManualTrigger,
+  flowRunCurrentTimeCount,
+  flowRunTimeActiveTotal,
+} from '../prefect-flow-runs';
 
-jest.spyOn(stateManager, 'getFlowRuns').mockReturnValue([
-  {
-    id: '69b95f48-3691-4494-ba5c-896d2b9b0c7a',
-    name: 'quantum-camel',
-    tags: [],
-    parent_task_run_id: null,
-    state_type: 'RUNNING',
-    expected_start_time: '2023-06-25T21:45:29.753428+00:00',
-    next_scheduled_start_time: null,
-    start_time: '2023-06-25T21:45:45.798916+00:00',
-    end_time: null,
-    total_run_time: 0,
-    estimated_run_time: 1.173413,
-    estimated_start_time_delta: 16.045488,
-    auto_scheduled: false,
-    flow_name: 'my-flow',
-    current_time: '2023-06-25T21:45:46.974Z',
-    previous_state: undefined,
-    updated_state: true,
-  },
-]);
-
-const promIncSpy = jest.spyOn(flowRunCountCounter, 'inc');
+const mockGetFlowRuns = jest.spyOn(stateManager, 'getFlowRuns');
+const mockGetFlowRunsCount = jest.spyOn(stateManager, 'getFlowRunsCount');
+const flowRunCountCounterSpy = jest.spyOn(flowRunCountCounter, 'inc');
+const flowRunCountGaugeSpy = jest.spyOn(flowRunCountGauge, 'set');
+const flowRunEndTimeCountSpy = jest.spyOn(flowRunEndTimeCount, 'inc');
+const flowRunManualTriggerCountSpy = jest.spyOn(flowRunManualTriggerCount, 'inc');
+const flowRunCurrentTimeCountSpy = jest.spyOn(flowRunCurrentTimeCount, 'inc');
 const labelsMock = jest.fn().mockReturnThis();
 flowRunCountCounter.labels = labelsMock;
+flowRunCountGauge.labels = labelsMock;
+flowRunEndTimeCount.labels = labelsMock;
+flowRunManualTriggerCount.labels = labelsMock;
+flowRunCurrentTimeCount.labels = labelsMock;
+
+const expectedLabel = (state) => ({
+  flow_name: 'my-test-flow',
+  state,
+  tags: '',
+});
 
 describe('flowRunsCountTotal', () => {
-  it('increments the count when the flow is new or its state has changed', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
+
+  it('increments the count when the flow run is new or its state has changed', () => {
+    mockGetFlowRuns.mockReturnValue(mocks.mockNewFlowRun);
     flowRunsCountTotal();
     expect(labelsMock).toHaveBeenCalledTimes(1);
-    expect(labelsMock).toHaveBeenCalledWith({
-      flow_name: 'my-flow',
-      state: 'RUNNING',
-      tags: '',
+    expect(labelsMock).toHaveBeenCalledWith(expectedLabel('RUNNING'));
+    expect(flowRunCountCounterSpy).toHaveBeenCalledTimes(1);
+    expect(flowRunCountCounterSpy).toHaveBeenCalledWith(1);
+  });
+
+  it('does not increment the count when the flow run has been seen and the state has not changes', () => {
+    mockGetFlowRuns.mockReturnValue(mocks.mockActiveFlowRun);
+    expect(labelsMock).toHaveBeenCalledTimes(0);
+    expect(flowRunCountCounterSpy).toHaveBeenCalledTimes(0);
+  });
+
+  it('sets the correct label when the flow run has entered a new state', () => {
+    mockGetFlowRuns.mockReturnValue(mocks.mockTerminalFlowRun);
+    flowRunsCountTotal();
+    expect(labelsMock).toHaveBeenCalledTimes(1);
+    expect(labelsMock).toHaveBeenCalledWith(expectedLabel('COMPLETED'));
+  });
+
+  it('incrments the count when the flow run has entered a new state', () => {
+    mockGetFlowRuns.mockReturnValue(mocks.mockTerminalFlowRun);
+    flowRunsCountTotal();
+    expect(flowRunCountCounterSpy).toHaveBeenCalledTimes(1);
+    expect(flowRunCountCounterSpy).toHaveBeenCalledWith(1);
+  });
+});
+
+describe('flowRunsCount', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
+
+  it('sets the correct count for every state', () => {
+    mockGetFlowRunsCount.mockReturnValue(mocks.mockFlowRunCount);
+    flowRunsCount();
+    expect(flowRunCountGaugeSpy).toHaveBeenCalledTimes(mocks.mockFlowRunCount.length);
+    _.forEach(mocks.mockFlowRunCount, (value, index) =>
+      expect(flowRunCountGaugeSpy).toHaveBeenNthCalledWith(index + 1, value.count),
+    );
+  });
+});
+
+describe('flowRunTime', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
+
+  it('does not count for an active flow run', () => {
+    mockGetFlowRuns.mockReturnValue(mocks.mockActiveFlowRun);
+    flowRunTime();
+    expect(labelsMock).toHaveBeenCalledTimes(0);
+    expect(flowRunEndTimeCountSpy).toHaveBeenCalledTimes(0);
+  });
+
+  it('sets the correct label for a finished flow run', () => {
+    mockGetFlowRuns.mockReturnValue(mocks.mockTerminalFlowRun);
+    flowRunTime();
+    expect(labelsMock).toHaveBeenCalledTimes(1);
+    expect(labelsMock).toHaveBeenCalledWith(expectedLabel('COMPLETED'));
+  });
+
+  it('it increments the count for a finished flow run by the amount of time taken', () => {
+    mockGetFlowRuns.mockReturnValue(mocks.mockTerminalFlowRun);
+    const [{ total_run_time: expectedTotalTime }] = mocks.mockTerminalFlowRun;
+    flowRunTime();
+    expect(flowRunEndTimeCountSpy).toHaveBeenCalledTimes(1);
+    expect(flowRunEndTimeCountSpy).toHaveBeenCalledWith(Math.round(expectedTotalTime));
+  });
+});
+
+describe('flowRunManualTrigger', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
+
+  it('does not count for an active flow run', () => {
+    mockGetFlowRuns.mockReturnValue([
+      {
+        ...[mocks.mockManualTriggerFlowRun],
+        state_type: 'RUNNING',
+        previous_state: undefined,
+      },
+    ]);
+    flowRunManualTrigger();
+    expect(labelsMock).toHaveBeenCalledTimes(0);
+    expect(flowRunManualTriggerCountSpy).toHaveBeenCalledTimes(0);
+  });
+
+  it('sets the correct label for a finished flow run if it is a manual trigger', () => {
+    mockGetFlowRuns.mockReturnValue(mocks.mockManualTriggerFlowRun);
+    flowRunManualTrigger();
+    expect(labelsMock).toHaveBeenCalledTimes(1);
+    expect(labelsMock).toHaveBeenCalledWith(expectedLabel('COMPLETED'));
+  });
+
+  it('it increments the count for a finished flow run if it is a manual trigger', () => {
+    mockGetFlowRuns.mockReturnValue(mocks.mockManualTriggerFlowRun);
+    flowRunManualTrigger();
+    expect(flowRunManualTriggerCountSpy).toHaveBeenCalledTimes(1);
+    expect(flowRunManualTriggerCountSpy).toHaveBeenCalledWith(1);
+  });
+
+  describe('flowRunTimeActiveTotal', () => {
+    beforeEach(() => {
+      jest.clearAllMocks();
     });
 
-    expect(promIncSpy).toHaveBeenCalledTimes(1);
-    expect(promIncSpy).toHaveBeenCalledWith(1);
+    it('sets the correct label for an active flow run', () => {
+      mockGetFlowRuns.mockReturnValue(mocks.mockActiveFlowRun);
+      flowRunTimeActiveTotal();
+      expect(labelsMock).toHaveBeenCalledTimes(1);
+      expect(labelsMock).toHaveBeenCalledWith(expectedLabel('RUNNING'));
+    });
+
+    it('incrments the the time now by the current time in the previous active flow run', () => {
+      jest.spyOn(new Date('2023-06-27T22:49:40.245Z'), 'getTime').mockImplementation(() => 1687906180245);
+      // const [{ current_time: currentTime }] = mocks.mockActiveFlowRun;
+      mockGetFlowRuns.mockReturnValue(mocks.mockActiveFlowRun);
+      flowRunTimeActiveTotal();
+      expect(flowRunCurrentTimeCountSpy).toHaveBeenCalledTimes(1);
+      expect(flowRunCurrentTimeCountSpy).toHaveBeenCalledWith(5);
+    });
   });
 });

@@ -8,7 +8,7 @@ Configure a .env file at the root of the project:
 
 ```
 PORT=4000                                       # The server port
-PREFECT_API_URL=http://127.0.0.1:4200/          # The address of your prefect server (include last backslash)
+PREFECT_API_URL=http://127.0.0.1:4200/          # The address of your on-prem prefect server (overriden if PREFECT_API_KEY is present)
 PREFECT_API_KEY=""                              # Prefect api key (if required)
 PREFECT_ACCOUNT_ID=""                           # Prefect account id (only required for prefect cloud)
 PREFECT_WORKSPACE_ID=""                         # Prefect workspace id (only required for prefect cloud)

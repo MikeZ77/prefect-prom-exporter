@@ -2,5 +2,6 @@
     "rootDir": "./",
     "moduleFileExtensions": ["js"],
     "testEnvironment": "node",
-    "testRegex": "(/__tests__/.*|(\\.|/)(test|spec))\\.js$"
+    "testRegex": "(/__tests__/.*|(\\.|/)(test|spec))\\.js$",
+    "testPathIgnorePatterns": ["/mock-data\\.js$"]
   }

@@ -1,6 +1,7 @@
 export const PREFECT_API_URL = process.env.PREFECT_API_URL || 'http://127.0.0.1:4200/';
-export const PREFECT_ACCOUNT_ID = process.env.PREFECT_API_URL || '';
-export const PREFECT_WORKSPACE_ID = process.env.PREFECT_WORKSPACE_ID || '';
+export const PREFECT_API_KEY = process.env.PREFECT_API_KEY || undefined;
+export const PREFECT_ACCOUNT_ID = process.env.PREFECT_ACCOUNT_ID || undefined;
+export const PREFECT_WORKSPACE_ID = process.env.PREFECT_WORKSPACE_ID || undefined;
 export const ENV = process.env.ENV || 'development'; // TODO: Turn off logging color in producton
 export const PORT = process.env.PORT || 3000;
 export const SCRAPE_INTERVAL = process.env.SCRAPE_INTERVAL || 30000;

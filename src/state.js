@@ -12,6 +12,14 @@ const stateManager = () => {
   const ACTIVE_STATES = ['RUNNING', 'PAUSED', 'CANCELLING'];
   const STARTING_STATES = ['SCHEDULED', 'PENDING'];
 
+  const pythonLogLevels = {
+    50: 'CRITICAL',
+    40: 'ERROR',
+    30: 'WARNING',
+    20: 'INFO',
+    10: 'DEBUG',
+  };
+
   const state = {
     prevPollTime: new Date().toISOString(),
     curPollTime: new Date().toISOString(),
@@ -46,10 +54,10 @@ const stateManager = () => {
 
   const constructLabels = (prefectObject) => {
     return {
-      ...(prefectObject.name ? { flow_name: prefectObject.flow_name } : {}),
+      ...(prefectObject.flow_name ? { flow_name: prefectObject.flow_name } : {}),
       ...(prefectObject.tags ? { tags: prefectObject.tags.toString() } : {}),
       ...(prefectObject.state_type ? { state: prefectObject.state_type } : {}),
-      ...(prefectObject.level ? { level: prefectObject.level } : {}),
+      ...(prefectObject.level ? { level: _.get(pythonLogLevels, prefectObject.level) } : {}),
     };
   };
 
@@ -63,10 +71,11 @@ const stateManager = () => {
       fetchApi('FLOW_RUNS_FILTER_START_TIME', state.prevPollTime, state.curPollTime),
       fetchApi('FLOWS_FILTER'),
     ]);
-    const curFlowRuns = await fetchApi('FLOW_RUNS_FILTER_ID', _.map([...newFlowRuns, ...state.flowRuns], 'id'));
+    const curFlowRuns = await fetchApi('FLOW_RUNS_FILTER_ID', _.uniq(_.map([...newFlowRuns, ...state.flowRuns], 'id')));
     const [allFlowsById, prevFlowRunsById] = [_.keyBy(allFlows, 'id'), _.keyBy(state.flowRuns, 'id')];
 
     state.flowRuns = _.map(curFlowRuns, (currentflowRun) => {
+      // TODO use [ ] if a default is not needed
       const flow = _.get(allFlowsById, currentflowRun.flow_id);
       const previousFlowRun = _.get(prevFlowRunsById, currentflowRun.id);
 
