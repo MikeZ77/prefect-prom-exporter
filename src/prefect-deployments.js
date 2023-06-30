@@ -1,25 +1,27 @@
-// import promClient from 'prom-client';
-// import fetchApi from './get-request.js';
-// import stateManager from './state.js';
+import promClient from 'prom-client';
+import _ from 'lodash';
+import fetchApi from './get-request.js';
 
-// const flowsCount = new promClient.Gauge({
-//   name: 'prefect_flows',
-//   help: 'Prefect flows total count based on tag and work_pool',
-//   // labelNames: ['tags'],
-// });
+const deploymentsGauge = new promClient.Gauge({
+  name: 'prefect_current_deployments',
+  help: 'a prefect deployment which can be scheduled~1 or not scheduled~0',
+  labelNames: ['tags', 'name', 'schedule_interval', 'last_updated', 'updated_by'],
+});
 
-// // eslint-disable-next-line import/prefer-default-export
-// export const flowInformation = async () => {
-//   const { getFlowRuns, constructLabels } = stateManager;
-//   flowsCount.set(data);
-// };
+// eslint-disable-next-line import/prefer-default-export
+const fetchDeployments = async () => {
+  const deployments = await fetchApi('DEPLOYMENTS_FILTER');
+  _.forEach(deployments, (deployment) => {
+    deploymentsGauge
+      .labels({
+        tags: deployment.tags.toString(),
+        name: deployment.name,
+        schedule_interval: deployment.schedule?.interval || '',
+        last_updated: deployment.updated,
+        updated_by: deployment.updated_by?.display_value || '',
+      })
+      .set(deployment.is_schedule_active ? 1 : 0);
+  });
+};
 
-/*
-TODO: 
-  * Get all deployments (flows) Counter is_schedule_active~[1|0]
-  * tags
-  * schedule.interval
-  * version
-  * name
-  * updated_by.display_value
-*/
+export default async () => [fetchDeployments()];

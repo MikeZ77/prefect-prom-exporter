@@ -85,6 +85,7 @@ const stateManager = () => {
         current_time: _.includes(TERMINAL_STATES, currentflowRun.state_type)
           ? previousFlowRun.current_time
           : new Date(),
+        previous_time: previousFlowRun && previousFlowRun.current_time,
         previous_state:
           previousFlowRun && currentflowRun.state_type !== previousFlowRun.state_type
             ? previousFlowRun.state_type
@@ -93,47 +94,6 @@ const stateManager = () => {
           !previousFlowRun || (previousFlowRun && currentflowRun.state_type !== previousFlowRun.state_type),
       };
     });
-
-    //   _(flowRun)
-    //     .thru((updatedFlowRun) => {
-    //       const flow = _.get(allFlowsById, updatedFlowRun.flow_id);
-    //       return { ...updatedFlowRun, flow_name: flow.name };
-    //     })
-    //     .thru((updatedFlowRun) => {
-    //       // TODO: Change to if prev state != current state
-    //       // Keep current_time: prevFlowRun.current_time for TERMINAL_STATES
-    //       // For Counter, flag true if a flow run is new, otherwise flag false
-    //       const prevFlowRun = _.get(prevFlowRunsById, updatedFlowRun.id);
-    //       if (_.includes(TERMINAL_STATES, updatedFlowRun.state_type)) {
-    //         return {
-    //           ...updatedFlowRun,
-    //           current_time: prevFlowRun.current_time,
-    //         };
-    //       }
-    //       return updatedFlowRun;
-    //     })
-    //     .thru((updatedFlowRun) => {
-    //       const prevFlowRun = _.get(prevFlowRunsById, updatedFlowRun.id);
-    //       if (prevFlowRun && updatedFlowRun.state_type !== prevFlowRun.state_type) {
-    //         return {
-    //           ...updatedFlowRun,
-    //           previous_state: prevFlowRun.state_type,
-    //           updated_state: true,
-    //         };
-    //       }
-
-    //       if (!prevFlowRun) {
-    //         return { ...updatedFlowRun, updated_state: true };
-    //       }
-    //       return { ...updatedFlowRun, updated_state: false };
-    //     })
-    //     .thru((updatedFlowRun) => {
-    //       if (_.includes(ACTIVE_STATES, updatedFlowRun.state_type)) {
-    //         return { ...updatedFlowRun, current_time: new Date() };
-    //       }
-    //       return updatedFlowRun;
-    //     })
-    //     .value(),
   };
 
   const cleanupTerminalStates = () => {
@@ -177,6 +137,7 @@ const stateManager = () => {
     getTimeDelta,
     setTimeDelta,
     fetchData,
+    fetchFlowRunsCount,
     constructLabels,
     cleanupTerminalStates,
   };

@@ -22,11 +22,11 @@ const config = {
   FLOW_RUNS_FILTER_ID: Api.flowRunsById,
   WORK_POOLS: Api.workPoolsT,
   LOGS_FILTER: Api.logsFilter,
+  DEPLOYMENTS_FILTER: Api.deploymentsFilter,
 };
 
 class HTTPResponseError extends Error {
   constructor(response) {
-    console.log(response);
     super(`[HTTP Error Response] status:${response.status} ${response.statusText} url:${response.url}`);
     this.response = response;
   }

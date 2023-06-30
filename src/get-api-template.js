@@ -93,3 +93,8 @@ export const logsFilter = (after, before) => ({
     }),
   },
 });
+
+export const deploymentsFilter = () => ({
+  url: `${PREFECT_API_URL}api/deployments/filter`,
+  options: { method: 'POST' },
+});

@@ -158,13 +158,30 @@ describe('flowRunManualTrigger', () => {
       expect(labelsMock).toHaveBeenCalledWith(expectedLabel('RUNNING'));
     });
 
-    it('incrments the the time now by the current time in the previous active flow run', () => {
-      jest.spyOn(new Date('2023-06-27T22:49:40.245Z'), 'getTime').mockImplementation(() => 1687906180245);
-      // const [{ current_time: currentTime }] = mocks.mockActiveFlowRun;
+    it('increments the time by the current time minus the start time for a new flow run', () => {
+      const [{ current_time: currentTime, start_time: startTime }] = mocks.mockNewFlowRun;
+      mockGetFlowRuns.mockReturnValue(mocks.mockNewFlowRun);
+      flowRunTimeActiveTotal();
+      expect(flowRunCurrentTimeCountSpy).toHaveBeenCalledTimes(1);
+      expect(flowRunCurrentTimeCountSpy).toHaveBeenCalledWith(
+        Math.round((new Date(currentTime) - new Date(startTime)) / 1000),
+      );
+    });
+
+    it('increments the time by the current time minus the previous time for an active flow run ', () => {
+      const [{ current_time: currentTime, previous_time: previousTime }] = mocks.mockActiveFlowRun;
       mockGetFlowRuns.mockReturnValue(mocks.mockActiveFlowRun);
       flowRunTimeActiveTotal();
       expect(flowRunCurrentTimeCountSpy).toHaveBeenCalledTimes(1);
-      expect(flowRunCurrentTimeCountSpy).toHaveBeenCalledWith(5);
+      expect(flowRunCurrentTimeCountSpy).toHaveBeenCalledWith(
+        Math.round((new Date(currentTime) - new Date(previousTime)) / 1000),
+      );
+    });
+
+    it('does not increment for a finished flow run', () => {
+      mockGetFlowRuns.mockReturnValue(mocks.mockTerminalFlowRun);
+      flowRunTimeActiveTotal();
+      expect(flowRunCurrentTimeCountSpy).toHaveBeenCalledTimes(0);
     });
   });
 });

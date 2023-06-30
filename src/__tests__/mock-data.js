@@ -1,3 +1,5 @@
+import _ from 'lodash';
+
 const mockNewFlowRun = [
   {
     id: '69b95f48-3691-4494-ba5c-896d2b9b0c7a',
@@ -15,6 +17,7 @@ const mockNewFlowRun = [
     auto_scheduled: true,
     flow_name: 'my-test-flow',
     current_time: '2023-06-27T22:49:25.053Z',
+    previous_time: undefined,
     previous_state: undefined,
     updated_state: true,
   },
@@ -37,6 +40,7 @@ const mockActiveFlowRun = [
     auto_scheduled: true,
     flow_name: 'my-test-flow',
     current_time: '2023-06-27T22:49:35.245Z',
+    previous_time: '2023-06-27T22:49:25.053Z',
     previous_state: undefined,
     updated_state: false,
   },
@@ -59,6 +63,7 @@ const mockTerminalFlowRun = [
     auto_scheduled: true,
     flow_name: 'my-test-flow',
     current_time: '2023-06-27T22:49:35.245Z',
+    previous_time: '2023-06-27T22:49:35.245Z',
     previous_state: 'RUNNING',
     updated_state: true,
   },
@@ -96,4 +101,32 @@ const mockManualTriggerFlowRun = [
   },
 ];
 
-export default { mockNewFlowRun, mockActiveFlowRun, mockTerminalFlowRun, mockFlowRunCount, mockManualTriggerFlowRun };
+const mockFetchAllFlows = [
+  {
+    id: 'acb7f1c9-4ece-425f-892c-b32f5da3f4ae',
+    created: '2023-06-10T22:38:07.178914+00:00',
+    updated: '2023-06-10T22:38:07.178926+00:00',
+    name: 'my-test-flow',
+    tags: [],
+  },
+];
+
+const mockFetchApi = async (metric) => {
+  switch (metric) {
+    case 'FLOWS_FILTER':
+      return mockFetchAllFlows;
+    case metric.match(/^FLOW_RUNS_COUNT_/):
+      return _.find(mockFlowRunCount, { state: metric.split('_').pop() });
+    default:
+      return undefined;
+  }
+};
+
+export default {
+  mockNewFlowRun,
+  mockActiveFlowRun,
+  mockTerminalFlowRun,
+  mockFlowRunCount,
+  mockManualTriggerFlowRun,
+  mockFetchApi,
+};

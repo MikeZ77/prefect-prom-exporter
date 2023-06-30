@@ -145,13 +145,16 @@ export const flowRunCummulativeEstimatedStartTimeDelta = () => {
 
 export const flowRunTimeActiveTotal = () => {
   const { getActiveStates, getFlowRuns, constructLabels } = stateManager;
-  const currentTime = new Date();
   _.filter(getFlowRuns(), (flowRun) => _.includes(getActiveStates(), flowRun.state_type)).forEach((flowRun) => {
-    console.log(currentTime.getTime(), new Date(flowRun.current_time));
-    console.log(currentTime - new Date(flowRun.current_time));
     flowRunCurrentTimeCount
       .labels(constructLabels(flowRun))
-      .inc(currentTime.getTime() - new Date(flowRun.current_time));
+      .inc(
+        Math.round(
+          (!flowRun.previous_time
+            ? new Date(flowRun.current_time) - new Date(flowRun.start_time)
+            : new Date(flowRun.current_time) - new Date(flowRun.previous_time)) / 1000,
+        ),
+      );
   });
 };
 
@@ -160,14 +163,14 @@ export const flowRunTimeActive = () => {
   _.forEach(getFlowRuns(), (flowRun) => {
     if (_.includes(getTerminalStates(), flowRun.state_type)) {
       flowRunCurrentTimeGauge
-        .labels(constructLabels(flowRun))
-        .dec(new Date(flowRun.current_time) - new Date(flowRun.start_time));
+        .labels(constructLabels({ ...flowRun, state_type: flowRun.previous_state }))
+        .dec(Math.round((new Date(flowRun.current_time) - new Date(flowRun.start_time)) / 1000));
     }
 
     if (_.includes(getActiveStates(), flowRun.state_type)) {
       flowRunCurrentTimeGauge
         .labels(constructLabels(flowRun))
-        .set(new Date(flowRun.current_time) - new Date(flowRun.start_time));
+        .set(Math.round((new Date(flowRun.current_time) - new Date(flowRun.start_time)) / 1000));
     }
   });
 };

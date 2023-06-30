@@ -11,14 +11,6 @@
     "server:dev": "nodemon server.js",
     "server:prod": "node server.js"
   },
-  "husky": {
-    "hooks": {
-      "pre-commit": "lint-staged"
-    }
-  },
-  "lint-staged": {
-    "*.js": "npm run lint:fix"
-  },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/MikeZ77/prefect-prom-exporter.git"
