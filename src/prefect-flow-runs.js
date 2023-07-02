@@ -89,36 +89,36 @@ export const flowRunsCount = () => {
 };
 
 export const flowRunTime = () => {
-  const { getFlowRuns, getTerminalStates, constructLabels } = stateManager;
-  _.filter(getFlowRuns(), (flowRun) => _.includes(getTerminalStates(), flowRun.state_type)).forEach((flowRun) =>
+  const { getFlowRuns, getStates, constructLabels } = stateManager;
+  _.filter(getFlowRuns(), (flowRun) => _.includes(getStates('TERMINAL'), flowRun.state_type)).forEach((flowRun) =>
     flowRunEndTimeCount.labels(constructLabels(flowRun)).inc(Math.round(flowRun.total_run_time)),
   );
 };
 
 export const flowRunEstimatedRunTime = () => {
-  const { getFlowRuns, getTerminalStates, constructLabels } = stateManager;
-  _.filter(getFlowRuns(), (flowRun) => _.includes(getTerminalStates(), flowRun.state_type)).forEach((flowRun) =>
+  const { getFlowRuns, getStates, constructLabels } = stateManager;
+  _.filter(getFlowRuns(), (flowRun) => _.includes(getStates('TERMINAL'), flowRun.state_type)).forEach((flowRun) =>
     flowRunEstimatedRunTimeCount.labels(constructLabels(flowRun)).inc(Math.round(flowRun.estimated_run_time)),
   );
 };
 
 export const flowRunCummulativeEndTime = () => {
-  const { getFlowRuns, getTerminalStates, constructLabels } = stateManager;
-  _.filter(getFlowRuns(), (flowRun) => _.includes(getTerminalStates(), flowRun.state_type)).forEach((flowRun) =>
+  const { getFlowRuns, getStates, constructLabels } = stateManager;
+  _.filter(getFlowRuns(), (flowRun) => _.includes(getStates('TERMINAL'), flowRun.state_type)).forEach((flowRun) =>
     flowRunEndTimeHist.labels(constructLabels(flowRun)).observe(Math.round(flowRun.total_run_time)),
   );
 };
 
 export const flowRunCummulativeEstimatedRunTime = () => {
-  const { getFlowRuns, getTerminalStates, constructLabels } = stateManager;
-  _.filter(getFlowRuns(), (flowRun) => _.includes(getTerminalStates(), flowRun.state_type)).forEach((flowRun) =>
+  const { getFlowRuns, getStates, constructLabels } = stateManager;
+  _.filter(getFlowRuns(), (flowRun) => _.includes(getStates('TERMINAL'), flowRun.state_type)).forEach((flowRun) =>
     flowRunEstimatedRunTimeHist.labels(constructLabels(flowRun)).observe(Math.round(flowRun.estimated_run_time)),
   );
 };
 
 export const flowRunManualTrigger = () => {
-  const { getFlowRuns, getTerminalStates, constructLabels } = stateManager;
-  _.filter(getFlowRuns(), (flowRun) => _.includes(getTerminalStates(), flowRun.state_type)).forEach((flowRun) => {
+  const { getFlowRuns, getStates, constructLabels } = stateManager;
+  _.filter(getFlowRuns(), (flowRun) => _.includes(getStates('TERMINAL'), flowRun.state_type)).forEach((flowRun) => {
     if (!flowRun.auto_scheduled) {
       flowRunManualTriggerCount.labels(constructLabels(flowRun)).inc(1);
     }
@@ -126,8 +126,8 @@ export const flowRunManualTrigger = () => {
 };
 
 export const flowRunEstimatedStartTimeDelta = () => {
-  const { getFlowRuns, getTerminalStates, constructLabels } = stateManager;
-  _.filter(getFlowRuns(), (flowRun) => _.includes(getTerminalStates(), flowRun.state_type)).forEach((flowRun) =>
+  const { getFlowRuns, getStates, constructLabels } = stateManager;
+  _.filter(getFlowRuns(), (flowRun) => _.includes(getStates('TERMINAL'), flowRun.state_type)).forEach((flowRun) =>
     flowRunEstimatedStartTimeDeltaCount
       .labels(constructLabels(flowRun))
       .inc(Math.round(flowRun.estimated_start_time_delta)),
@@ -135,8 +135,8 @@ export const flowRunEstimatedStartTimeDelta = () => {
 };
 
 export const flowRunCummulativeEstimatedStartTimeDelta = () => {
-  const { getFlowRuns, getTerminalStates, constructLabels } = stateManager;
-  _.filter(getFlowRuns(), (flowRun) => _.includes(getTerminalStates(), flowRun.state_type)).forEach((flowRun) =>
+  const { getFlowRuns, getStates, constructLabels } = stateManager;
+  _.filter(getFlowRuns(), (flowRun) => _.includes(getStates('TERMINAL'), flowRun.state_type)).forEach((flowRun) =>
     flowRunEstimatedStartTimeDeltaHist
       .labels(constructLabels(flowRun))
       .observe(Math.round(flowRun.estimated_start_time_delta)),
@@ -144,8 +144,8 @@ export const flowRunCummulativeEstimatedStartTimeDelta = () => {
 };
 
 export const flowRunTimeActiveTotal = () => {
-  const { getActiveStates, getFlowRuns, constructLabels } = stateManager;
-  _.filter(getFlowRuns(), (flowRun) => _.includes(getActiveStates(), flowRun.state_type)).forEach((flowRun) => {
+  const { getStates, getFlowRuns, constructLabels } = stateManager;
+  _.filter(getFlowRuns(), (flowRun) => _.includes(getStates('ACTIVE'), flowRun.state_type)).forEach((flowRun) => {
     flowRunCurrentTimeCount
       .labels(constructLabels(flowRun))
       .inc(
@@ -159,15 +159,15 @@ export const flowRunTimeActiveTotal = () => {
 };
 
 export const flowRunTimeActive = () => {
-  const { getTerminalStates, getActiveStates, getFlowRuns, constructLabels } = stateManager;
+  const { getStates, getFlowRuns, constructLabels } = stateManager;
   _.forEach(getFlowRuns(), (flowRun) => {
-    if (_.includes(getTerminalStates(), flowRun.state_type)) {
+    if (_.includes(getStates('TERMINAL'), flowRun.state_type)) {
       flowRunCurrentTimeGauge
         .labels(constructLabels({ ...flowRun, state_type: flowRun.previous_state }))
         .dec(Math.round((new Date(flowRun.current_time) - new Date(flowRun.start_time)) / 1000));
     }
 
-    if (_.includes(getActiveStates(), flowRun.state_type)) {
+    if (_.includes(getStates('ACTIVE'), flowRun.state_type)) {
       flowRunCurrentTimeGauge
         .labels(constructLabels(flowRun))
         .set(Math.round((new Date(flowRun.current_time) - new Date(flowRun.start_time)) / 1000));

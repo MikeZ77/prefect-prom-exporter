@@ -9,19 +9,19 @@ const deploymentsGauge = new promClient.Gauge({
 });
 
 // eslint-disable-next-line import/prefer-default-export
-const fetchDeployments = async () => {
-  const deployments = await fetchApi('DEPLOYMENTS_FILTER');
+const fetchDeployments = async (sendRequest) => {
+  const deployments = await sendRequest('DEPLOYMENTS_FILTER');
   _.forEach(deployments, (deployment) => {
     deploymentsGauge
       .labels({
         tags: deployment.tags.toString(),
         name: deployment.name,
         schedule_interval: deployment.schedule?.interval || '',
-        last_updated: deployment.updated,
         updated_by: deployment.updated_by?.display_value || '',
+        last_updated: deployment.updated,
       })
       .set(deployment.is_schedule_active ? 1 : 0);
   });
 };
 
-export default async () => [fetchDeployments()];
+export default async () => [fetchDeployments(fetchApi)];

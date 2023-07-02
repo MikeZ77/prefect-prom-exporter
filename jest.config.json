@@ -2,6 +2,11 @@
     "rootDir": "./",
     "moduleFileExtensions": ["js"],
     "testEnvironment": "node",
+    "transform": {},
     "testRegex": "(/__tests__/.*|(\\.|/)(test|spec))\\.js$",
-    "testPathIgnorePatterns": ["/mock-data\\.js$"]
+    "testPathIgnorePatterns": ["/mock-data\\.js$"],
+    "collectCoverage": true,
+    "coverageReporters": ["json-summary", "text"],
+    "coverageDirectory": "coverage",
+    "collectCoverageFrom": [ "src/**/{!(mock-data),}.js" ]
   }

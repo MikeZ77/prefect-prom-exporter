@@ -60,4 +60,5 @@ const fetchApi = () => {
   return sendRequest;
 };
 
+// export const buildApi = { fetchApi: fetchApi() };
 export default fetchApi();

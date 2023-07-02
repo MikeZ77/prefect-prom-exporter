@@ -12,14 +12,14 @@ const prefectVersion = new promClient.Gauge({
   labelNames: ['version'],
 });
 
-const fetchHealthCheck = async () => {
-  const value = await fetchApi('HEALTH');
+const fetchHealthCheck = async (sendRequest) => {
+  const value = await sendRequest('HEALTH');
   value ? healthCheck.set(1) : healthCheck.set(0);
 };
 
-const fetchPrefectVersion = async () => {
-  const value = await fetchApi('VERSION');
+const fetchPrefectVersion = async (sendRequest) => {
+  const value = await sendRequest('VERSION');
   prefectVersion.labels({ version: value }).set(1);
 };
 
-export default async () => [fetchHealthCheck(), fetchPrefectVersion()];
+export default async () => [fetchHealthCheck(fetchApi), fetchPrefectVersion(fetchApi)];

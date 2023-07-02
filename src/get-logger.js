@@ -1,4 +1,5 @@
 import winston from 'winston';
+import _ from 'lodash';
 import { ENV } from './get-env.js';
 
 const levels = {
@@ -15,9 +16,7 @@ const colors = {
   debug: 'white',
 };
 
-winston.addColors(colors);
-
-const format = winston.format.combine(
+const formatOptions = _.compact([
   winston.format.timestamp({ format: 'YYYY-MM-DD HH:mm:ss:ms' }),
   winston.format((info) => ({
     ...info,
@@ -25,10 +24,12 @@ const format = winston.format.combine(
   }))(),
   winston.format.splat(),
   // TODO: Remove color in production environment
-  winston.format.colorize({ level: true }),
+  ENV === 'development' && winston.format.colorize({ level: true }),
   winston.format.printf((info) => `${info.timestamp} ${info.level} ${info.message}`),
-);
+]);
 
+winston.addColors(colors);
+const format = winston.format.combine(...formatOptions);
 const transports = [new winston.transports.Console()];
 
 const Logger = winston.createLogger({

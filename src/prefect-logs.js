@@ -1,5 +1,4 @@
 import promClient from 'prom-client';
-// import _ from 'lodash';
 import _ from 'lodash';
 import stateManager from './state.js';
 

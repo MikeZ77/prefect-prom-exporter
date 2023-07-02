@@ -3,6 +3,7 @@ import _ from 'lodash';
 const mockNewFlowRun = [
   {
     id: '69b95f48-3691-4494-ba5c-896d2b9b0c7a',
+    flow_id: 'acb7f1c9-4ece-425f-892c-b32f5da3f4ae',
     name: 'quantum-camel',
     tags: [],
     parent_task_run_id: null,
@@ -26,6 +27,7 @@ const mockNewFlowRun = [
 const mockActiveFlowRun = [
   {
     id: '69b95f48-3691-4494-ba5c-896d2b9b0c7a',
+    flow_id: 'acb7f1c9-4ece-425f-892c-b32f5da3f4ae',
     name: 'quantum-camel',
     tags: [],
     parent_task_run_id: null,
@@ -49,6 +51,7 @@ const mockActiveFlowRun = [
 const mockTerminalFlowRun = [
   {
     id: '69b95f48-3691-4494-ba5c-896d2b9b0c7a',
+    flow_id: 'acb7f1c9-4ece-425f-892c-b32f5da3f4ae',
     name: 'quantum-camel',
     tags: [],
     parent_task_run_id: null,
@@ -111,15 +114,44 @@ const mockFetchAllFlows = [
   },
 ];
 
-const mockFetchApi = async (metric) => {
-  switch (metric) {
-    case 'FLOWS_FILTER':
+const mockSendRequestCount = async (metric) => {
+  switch (true) {
+    case metric === 'FLOWS_FILTER':
       return mockFetchAllFlows;
-    case metric.match(/^FLOW_RUNS_COUNT_/):
-      return _.find(mockFlowRunCount, { state: metric.split('_').pop() });
+    case /^FLOW_RUNS_COUNT_/.test(metric):
+      return _.find(mockFlowRunCount, { state: metric.split('_').pop() }).count;
     default:
       return undefined;
   }
+};
+
+const buildSendRequestFlowRuns = (flowRunsFilterStartTime, flowsFilter, flowRunsFilterId) => {
+  return async (metric) => {
+    switch (metric) {
+      case 'FLOW_RUNS_FILTER_START_TIME':
+        return flowRunsFilterStartTime();
+      case 'FLOWS_FILTER':
+        return flowsFilter();
+      case 'FLOW_RUNS_FILTER_ID':
+        return flowRunsFilterId();
+      default:
+        return undefined;
+    }
+  };
+};
+
+const stripTrackingFields = (flowRun) => {
+  const [
+    {
+      current_time: __,
+      previous_time: ___,
+      previous_state: ____,
+      updated_state: _____,
+      flow_name: ______,
+      ...mockFlowRunFromApi
+    },
+  ] = flowRun;
+  return mockFlowRunFromApi;
 };
 
 export default {
@@ -128,5 +160,8 @@ export default {
   mockTerminalFlowRun,
   mockFlowRunCount,
   mockManualTriggerFlowRun,
-  mockFetchApi,
+  mockFetchAllFlows,
+  mockSendRequestCount,
+  buildSendRequestFlowRuns,
+  stripTrackingFields,
 };
