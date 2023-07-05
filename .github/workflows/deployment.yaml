@@ -1,0 +1,46 @@
+name: Deployment
+on:
+  push:
+    branches:
+      - setup-ci
+    tags:
+      - '*'
+jobs:
+  build-test:
+    runs-on: ubuntu-22.04
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
+        with:
+          node-version: 18
+      - run: sudo apt install bc
+      - run: npm install
+      - run: npm run test
+      - run: ./scripts/update-coverage.sh
+      - run: ./scripts/update-build.sh passing
+      - uses: stefanzweifel/git-auto-commit-action@v4
+        with:
+          commit_message: Passing build.
+  push:
+    runs-on: ubuntu-22.04
+    needs: build-test
+    steps:
+      - uses: actions/checkout@v3
+      - run: docker login -u mzaghi -p ${{ secrets.DOCKER_API_KEY }}
+      - run: docker build -t prefect-prom-exporter .
+      - run: docker tag prefect-prom-exporter mzaghi/prefect-prom-exporter:${{ github.ref_name }}
+      - run: docker push mzaghi/prefect-prom-exporter:${{ github.ref_name }}
+  failed:
+    runs-on: ubuntu-22.04
+    needs: [build-test, push]
+    if: failure()
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v3
+      - run: ./scripts/update-build.sh failing
+      - uses: stefanzweifel/git-auto-commit-action@v4
+        with:
+          commit_message: Failing build.
