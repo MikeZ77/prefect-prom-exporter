@@ -1,4 +1,4 @@
-![Code Build](https://img.shields.io/badge/build-failing-red)
+![Code Build](https://img.shields.io/badge/build-passing-brightgreen)
 ![Code Coverage](https://img.shields.io/badge/coverage-61.2%25-yellow)
 
 # prefect-prom-exporter
