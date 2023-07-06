@@ -1,3 +1,6 @@
+![Code Build](https://img.shields.io/badge/build-passing-brightgreen)
+![Code Coverage](https://img.shields.io/badge/coverage-61.2%25-yellow)
+
 # prefect-prom-exporter
 
 This server creates Prometheus metrics from the Prefect 2 REST API. Currently, Prefect 2 Does not expose metrics for Prometheus.

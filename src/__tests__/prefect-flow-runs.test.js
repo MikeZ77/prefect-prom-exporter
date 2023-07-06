@@ -41,7 +41,7 @@ describe('flowRunsCountTotal', () => {
     jest.clearAllMocks();
   });
 
-  it('increments the count when the flow run is new or its state has changed', () => {
+  it('should increment the count when the flow run is new or its state has changed', () => {
     mockGetFlowRuns.mockReturnValue(mocks.mockNewFlowRun);
     flowRunsCountTotal();
     expect(labelsMock).toHaveBeenCalledTimes(1);
@@ -50,20 +50,20 @@ describe('flowRunsCountTotal', () => {
     expect(flowRunCountCounterSpy).toHaveBeenCalledWith(1);
   });
 
-  it('does not increment the count when the flow run has been seen and the state has not changes', () => {
+  it('should not increment the count when the flow run has been seen and the state has not changes', () => {
     mockGetFlowRuns.mockReturnValue(mocks.mockActiveFlowRun);
     expect(labelsMock).toHaveBeenCalledTimes(0);
     expect(flowRunCountCounterSpy).toHaveBeenCalledTimes(0);
   });
 
-  it('sets the correct label when the flow run has entered a new state', () => {
+  it('should set the correct label when the flow run has entered a new state', () => {
     mockGetFlowRuns.mockReturnValue(mocks.mockTerminalFlowRun);
     flowRunsCountTotal();
     expect(labelsMock).toHaveBeenCalledTimes(1);
     expect(labelsMock).toHaveBeenCalledWith(expectedLabel('COMPLETED'));
   });
 
-  it('incrments the count when the flow run has entered a new state', () => {
+  it('should increment the count when the flow run has entered a new state', () => {
     mockGetFlowRuns.mockReturnValue(mocks.mockTerminalFlowRun);
     flowRunsCountTotal();
     expect(flowRunCountCounterSpy).toHaveBeenCalledTimes(1);
@@ -76,7 +76,7 @@ describe('flowRunsCount', () => {
     jest.clearAllMocks();
   });
 
-  it('sets the correct count for every state', () => {
+  it('should set the correct count for every state', () => {
     mockGetFlowRunsCount.mockReturnValue(mocks.mockFlowRunCount);
     flowRunsCount();
     expect(flowRunCountGaugeSpy).toHaveBeenCalledTimes(mocks.mockFlowRunCount.length);
@@ -91,21 +91,21 @@ describe('flowRunTime', () => {
     jest.clearAllMocks();
   });
 
-  it('does not count for an active flow run', () => {
+  it('should not count for an active flow run', () => {
     mockGetFlowRuns.mockReturnValue(mocks.mockActiveFlowRun);
     flowRunTime();
     expect(labelsMock).toHaveBeenCalledTimes(0);
     expect(flowRunEndTimeCountSpy).toHaveBeenCalledTimes(0);
   });
 
-  it('sets the correct label for a finished flow run', () => {
+  it('should set the correct label for a finished flow run', () => {
     mockGetFlowRuns.mockReturnValue(mocks.mockTerminalFlowRun);
     flowRunTime();
     expect(labelsMock).toHaveBeenCalledTimes(1);
     expect(labelsMock).toHaveBeenCalledWith(expectedLabel('COMPLETED'));
   });
 
-  it('it increments the count for a finished flow run by the amount of time taken', () => {
+  it('should increment the count for a finished flow run by the amount of time taken', () => {
     mockGetFlowRuns.mockReturnValue(mocks.mockTerminalFlowRun);
     const [{ total_run_time: expectedTotalTime }] = mocks.mockTerminalFlowRun;
     flowRunTime();
@@ -119,7 +119,7 @@ describe('flowRunManualTrigger', () => {
     jest.clearAllMocks();
   });
 
-  it('does not count for an active flow run', () => {
+  it('should not count for an active flow run', () => {
     mockGetFlowRuns.mockReturnValue([
       {
         ...[mocks.mockManualTriggerFlowRun],
@@ -132,14 +132,14 @@ describe('flowRunManualTrigger', () => {
     expect(flowRunManualTriggerCountSpy).toHaveBeenCalledTimes(0);
   });
 
-  it('sets the correct label for a finished flow run if it is a manual trigger', () => {
+  it('should set the correct label for a finished flow run if it is a manual trigger', () => {
     mockGetFlowRuns.mockReturnValue(mocks.mockManualTriggerFlowRun);
     flowRunManualTrigger();
     expect(labelsMock).toHaveBeenCalledTimes(1);
     expect(labelsMock).toHaveBeenCalledWith(expectedLabel('COMPLETED'));
   });
 
-  it('it increments the count for a finished flow run if it is a manual trigger', () => {
+  it('should increment the count for a finished flow run if it is a manual trigger', () => {
     mockGetFlowRuns.mockReturnValue(mocks.mockManualTriggerFlowRun);
     flowRunManualTrigger();
     expect(flowRunManualTriggerCountSpy).toHaveBeenCalledTimes(1);
@@ -151,14 +151,14 @@ describe('flowRunManualTrigger', () => {
       jest.clearAllMocks();
     });
 
-    it('sets the correct label for an active flow run', () => {
+    it('should set the correct label for an active flow run', () => {
       mockGetFlowRuns.mockReturnValue(mocks.mockActiveFlowRun);
       flowRunTimeActiveTotal();
       expect(labelsMock).toHaveBeenCalledTimes(1);
       expect(labelsMock).toHaveBeenCalledWith(expectedLabel('RUNNING'));
     });
 
-    it('increments the time by the current time minus the start time for a new flow run', () => {
+    it('should increment the time by the current time minus the start time for a new flow run', () => {
       const [{ current_time: currentTime, start_time: startTime }] = mocks.mockNewFlowRun;
       mockGetFlowRuns.mockReturnValue(mocks.mockNewFlowRun);
       flowRunTimeActiveTotal();
@@ -168,7 +168,7 @@ describe('flowRunManualTrigger', () => {
       );
     });
 
-    it('increments the time by the current time minus the previous time for an active flow run ', () => {
+    it('should increment the time by the current time minus the previous time for an active flow run ', () => {
       const [{ current_time: currentTime, previous_time: previousTime }] = mocks.mockActiveFlowRun;
       mockGetFlowRuns.mockReturnValue(mocks.mockActiveFlowRun);
       flowRunTimeActiveTotal();
@@ -178,7 +178,7 @@ describe('flowRunManualTrigger', () => {
       );
     });
 
-    it('does not increment for a finished flow run', () => {
+    it('should not increment for a finished flow run', () => {
       mockGetFlowRuns.mockReturnValue(mocks.mockTerminalFlowRun);
       flowRunTimeActiveTotal();
       expect(flowRunCurrentTimeCountSpy).toHaveBeenCalledTimes(0);

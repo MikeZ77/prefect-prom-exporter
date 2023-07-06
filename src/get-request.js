@@ -33,7 +33,7 @@ class HTTPResponseError extends Error {
 }
 
 const fetchApi = () => {
-  const reponseCache = {};
+  const responseCache = {};
 
   const sendRequest = async (metric, ...args) => {
     const payload = args.length ? config[metric](...args) : config[metric]();
@@ -49,16 +49,15 @@ const fetchApi = () => {
         throw new HTTPResponseError(response);
       }
       const data = await response.json();
-      reponseCache[metric] = data;
+      responseCache[metric] = data;
       return data;
     } catch (error) {
       Logger.error(error.message);
-      return reponseCache[metric];
+      return responseCache[metric];
     }
   };
 
   return sendRequest;
 };
 
-// export const buildApi = { fetchApi: fetchApi() };
 export default fetchApi();
